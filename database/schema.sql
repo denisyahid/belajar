@@ -1,6 +1,4 @@
-CREATE DATABASE IF NOT EXISTS tes_karyawan CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE tes_karyawan;
-
+-- Pilih database Anda sebelum mengimpor file ini.
 CREATE TABLE IF NOT EXISTS questions (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   position ENUM('perawat','administrasi') NOT NULL,
@@ -11,9 +9,20 @@ CREATE TABLE IF NOT EXISTS questions (
   UNIQUE KEY position_order (position, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS participants (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(254) NOT NULL,
+  nik CHAR(16) NOT NULL,
+  position ENUM('perawat','administrasi') NOT NULL,
+  started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_participant_nik (nik)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS submissions (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   submission_token CHAR(64) NOT NULL UNIQUE,
+  participant_id BIGINT UNSIGNED NOT NULL UNIQUE,
   name VARCHAR(120) NOT NULL,
   email VARCHAR(254) NOT NULL,
   nik CHAR(16) NOT NULL,
@@ -21,7 +30,8 @@ CREATE TABLE IF NOT EXISTS submissions (
   correct_count SMALLINT UNSIGNED NOT NULL,
   total_questions SMALLINT UNSIGNED NOT NULL,
   score DECIMAL(5,2) NOT NULL,
-  submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (participant_id) REFERENCES participants(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS answers (
@@ -35,4 +45,10 @@ CREATE TABLE IF NOT EXISTS answers (
   FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
   FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE SET NULL,
   UNIQUE KEY submission_question (submission_id, question_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_login_attempts (
+  ip_hash CHAR(64) PRIMARY KEY,
+  attempts INT UNSIGNED NOT NULL DEFAULT 0,
+  locked_until DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
