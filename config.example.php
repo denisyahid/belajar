@@ -6,6 +6,7 @@ return [
     'database' => 'if0_43370700_kemnaker',
     'username' => 'if0_43370700',
     'password' => '', // Isi kata sandi database di server, jangan commit config.php.
-    'admin_username' => 'admin',
+    'twk_is_example' => true, // Ubah ke false hanya setelah soal final mentor diimpor dan divalidasi.
+    'admin_username' => 'rsudmalangbonggarut@gmail.com',
     'admin_password_hash' => '', // Hasil password_hash(), bukan kata sandi biasa.
 ];

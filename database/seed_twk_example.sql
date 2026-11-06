@@ -1,0 +1,22 @@
+-- CONTOH SEMENTARA, bukan soal dari mentor. Validasi dan ganti sebelum digunakan.
+INSERT INTO questions (position, sort_order, section, question, option_a, option_b, option_c, option_d, option_e, answer_key) VALUES
+('perawat', 1, 'TWK', 'Dasar negara Indonesia adalah...', 'Pancasila', 'UUDS 1950', 'Dekret Presiden', 'Piagam ASEAN', 'Konvensi internasional', 'A'),
+('perawat', 2, 'TWK', 'Semboyan Bhinneka Tunggal Ika memiliki makna...', 'Berbeda-beda tetapi tetap satu', 'Bersatu tanpa perbedaan', 'Setiap daerah berdiri sendiri', 'Mengutamakan satu kelompok', 'Semua orang harus sama', 'A'),
+('perawat', 3, 'TWK', 'Sila pertama Pancasila berbunyi...', 'Kemanusiaan yang adil dan beradab', 'Ketuhanan Yang Maha Esa', 'Persatuan Indonesia', 'Kerakyatan yang dipimpin oleh hikmat kebijaksanaan', 'Keadilan sosial bagi seluruh rakyat Indonesia', 'B'),
+('perawat', 4, 'TWK', 'Lambang sila ketiga Pancasila adalah...', 'Bintang', 'Rantai', 'Pohon beringin', 'Kepala banteng', 'Padi dan kapas', 'C'),
+('perawat', 5, 'TWK', 'Bahasa negara Indonesia adalah...', 'Bahasa daerah', 'Bahasa Inggris', 'Bahasa Melayu', 'Bahasa Indonesia', 'Bahasa Sanskerta', 'D'),
+('perawat', 6, 'TWK', 'Bendera negara Indonesia memiliki warna...', 'Merah dan putih', 'Biru dan putih', 'Merah dan kuning', 'Hijau dan putih', 'Merah dan biru', 'A'),
+('perawat', 7, 'TWK', 'Lagu kebangsaan Indonesia adalah...', 'Indonesia Pusaka', 'Garuda Pancasila', 'Indonesia Raya', 'Bagimu Negeri', 'Satu Nusa Satu Bangsa', 'C'),
+('perawat', 8, 'TWK', 'Bentuk negara Indonesia menurut UUD 1945 adalah...', 'Serikat', 'Kesatuan', 'Konfederasi', 'Kerajaan', 'Persemakmuran', 'B'),
+('perawat', 9, 'TWK', 'Hari Kemerdekaan Republik Indonesia diperingati setiap tanggal...', '1 Juni', '20 Mei', '28 Oktober', '17 Agustus', '10 November', 'D'),
+('perawat', 10, 'TWK', 'Naskah Proklamasi Kemerdekaan Indonesia dibacakan oleh...', 'Mohammad Hatta', 'Soekarno', 'Sutan Sjahrir', 'Ki Hajar Dewantara', 'Jenderal Sudirman', 'B'),
+('perawat', 11, 'TWK', 'Musyawarah untuk mencapai mufakat mencerminkan pengamalan sila...', 'Pertama', 'Kedua', 'Ketiga', 'Keempat', 'Kelima', 'D'),
+('perawat', 12, 'TWK', 'Menghormati teman yang menjalankan ibadah sesuai agamanya merupakan contoh...', 'Intoleransi', 'Toleransi', 'Diskriminasi', 'Persaingan', 'Individualisme', 'B'),
+('perawat', 13, 'TWK', 'UUD Negara Republik Indonesia Tahun 1945 merupakan...', 'Hukum dasar tertulis', 'Peraturan desa', 'Peraturan organisasi', 'Perjanjian dagang', 'Keputusan pribadi', 'A'),
+('perawat', 14, 'TWK', 'Lambang negara Republik Indonesia adalah...', 'Burung cenderawasih', 'Harimau sumatra', 'Garuda Pancasila', 'Komodo', 'Pohon beringin', 'C'),
+('perawat', 15, 'TWK', 'Salah satu contoh menjaga persatuan di lingkungan kerja adalah...', 'Memilih teman berdasarkan suku', 'Menghargai perbedaan dan bekerja sama', 'Menolak pendapat rekan', 'Mengutamakan kepentingan pribadi', 'Menyebarkan prasangka', 'B'),
+('perawat', 16, 'TWK', 'Nilai yang terkandung dalam sila kedua Pancasila adalah...', 'Menghargai martabat manusia', 'Memaksakan kehendak', 'Mengutamakan kelompok sendiri', 'Menolak musyawarah', 'Mengabaikan hak orang lain', 'A'),
+('perawat', 17, 'TWK', 'Sumpah Pemuda diperingati setiap tanggal...', '2 Mei', '1 Juni', '17 Agustus', '28 Oktober', '10 November', 'D'),
+('perawat', 18, 'TWK', 'Perilaku yang mencerminkan keadilan sosial adalah...', 'Memberikan pelayanan tanpa diskriminasi', 'Mendahulukan kerabat tanpa alasan', 'Mengabaikan hak orang lain', 'Membeda-bedakan masyarakat', 'Menggunakan fasilitas umum untuk kepentingan pribadi', 'A'),
+('perawat', 19, 'TWK', 'Dalam kehidupan bernegara, hak dan kewajiban warga negara sebaiknya...', 'Dilaksanakan secara seimbang', 'Hanya hak yang diutamakan', 'Hanya kewajiban yang diutamakan', 'Diabaikan bila tidak menguntungkan', 'Ditentukan oleh kelompok tertentu saja', 'A'),
+('perawat', 20, 'TWK', 'Sikap yang tepat ketika menerima informasi yang belum jelas kebenarannya adalah...', 'Langsung menyebarkannya', 'Memeriksa kebenaran melalui sumber tepercaya', 'Menambahkan informasi yang belum terbukti', 'Mengirimkannya ke semua grup', 'Menganggapnya pasti benar', 'B');

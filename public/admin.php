@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require dirname(__DIR__) . '/app.php';
 $error = ''; $notice = '';
-$adminUser = getenv('ADMIN_USERNAME') ?: (config()['admin_username'] ?? 'admin');
+$adminUser = getenv('ADMIN_USERNAME') ?: (config()['admin_username'] ?? 'rsudmalangbonggarut@gmail.com');
 $adminHash = getenv('ADMIN_PASSWORD_HASH') ?: (config()['admin_password_hash'] ?? '');
 if (!empty($_SESSION['admin_last']) && time() - $_SESSION['admin_last'] > 1800) unset($_SESSION['admin'], $_SESSION['admin_last']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -79,7 +79,7 @@ if ($loggedIn) {
         }
     } catch (Throwable $ex) { $error = 'Data tidak dapat dimuat. Periksa konfigurasi dan migrasi database.'; }
 }
-$labels = ['perawat' => 'Perawat', 'administrasi' => 'Administrasi'];
+$labels = ['perawat' => 'Keperawatan', 'administrasi' => 'Administrasi'];
 ?>
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#10355b"><title>Admin | Seleksi Magang RSUD Malangbong</title><link rel="stylesheet" href="assets/style.css"></head>
 <body class="admin-page"><header class="topbar"><div class="topbar-inner"><a class="institution-brand" href="index.php" aria-label="Tes Seleksi Magang RSUD Malangbong dan Kemnaker, halaman utama"><span class="institution-logos"><img src="assets/logo-rsud-malangbong.png" alt="Logo RSUD Malangbong"><span class="logo-separator" aria-hidden="true"></span><img src="assets/logo-kemnaker.png" alt="Logo Kemnaker"></span><span class="institution-divider" aria-hidden="true"></span><span class="institution-name"><strong>RSUD Malangbong</strong><small>SELEKSI MAGANG · KEMNAKER</small></span></a><div class="top-right"><?php if ($loggedIn): ?><form method="post"><input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>"><input type="hidden" name="action" value="logout"><button class="header-button">Keluar ↗</button></form><?php else: ?><a href="index.php" class="admin-link">Kembali ke tes ↗</a><?php endif; ?></div></div></header>
