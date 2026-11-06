@@ -35,3 +35,12 @@ function check_csrf(): void {
     $token = $_POST['csrf'] ?? '';
     if (!is_string($token) || !hash_equals($_SESSION['csrf'], $token)) { http_response_code(403); exit('Sesi tidak valid. Muat ulang halaman dan coba lagi.'); }
 }
+
+// Paket keperawatan hanya dibuka jika struktur 20 TWK + 30 SKD lengkap.
+function exam_is_ready(array $questions): bool {
+    if (count($questions) !== 50) return false;
+    foreach ($questions as $i => $question) {
+        if (($question['section'] ?? '') !== ($i < 20 ? 'TWK' : 'SKD')) return false;
+    }
+    return true;
+}

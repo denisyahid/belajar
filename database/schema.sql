@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS questions (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   position ENUM('perawat','administrasi') NOT NULL,
   sort_order SMALLINT UNSIGNED NOT NULL,
+  section ENUM('TWK','SKD') NOT NULL DEFAULT 'SKD',
   question TEXT NOT NULL,
   option_a TEXT NOT NULL, option_b TEXT NOT NULL, option_c TEXT NOT NULL, option_d TEXT NOT NULL, option_e TEXT NOT NULL,
   answer_key ENUM('A','B','C','D','E') NOT NULL,
