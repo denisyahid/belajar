@@ -1,40 +1,17 @@
 <?php
 declare(strict_types=1);
-session_start();
-header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: same-origin');
-
-function e($value): string { return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-function redirect(): void { header('Location: index.php', true, 303); exit; }
-function db(): PDO {
-    static $db = null;
-    if ($db === null) {
-        $config = is_file(dirname(__DIR__) . '/config.php') ? require dirname(__DIR__) . '/config.php' : [];
-        $host = getenv('DB_HOST') ?: ($config['host'] ?? '127.0.0.1');
-        $port = getenv('DB_PORT') ?: ($config['port'] ?? '3306');
-        $name = getenv('DB_NAME') ?: ($config['database'] ?? 'tes_karyawan');
-        $user = getenv('DB_USER') ?: ($config['username'] ?? 'root');
-        $pass = getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : ($config['password'] ?? '');
-        $db = new PDO("mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4", $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
-    }
-    return $db;
-}
-function questions(string $position): array {
-    $stmt = db()->prepare('SELECT * FROM questions WHERE position = ? ORDER BY sort_order');
-    $stmt->execute([$position]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32));
+require dirname(__DIR__) . '/app.php';
 $errors = [];
 $old = ['name' => '', 'email' => '', 'nik' => '', 'position' => ''];
 $databaseError = false;
 
+// Sesi dari versi lama tidak memiliki ID pendaftaran baru.
+if (!empty($_SESSION['candidate']) && empty($_SESSION['candidate']['id'])) unset($_SESSION['candidate'], $_SESSION['question_ids'], $_SESSION['submission_token']);
+if (!empty($_SESSION['completed']) && !isset($_SESSION['completed']['review'])) unset($_SESSION['completed']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!hash_equals($_SESSION['csrf'], (string)($_POST['csrf'] ?? ''))) {
-        http_response_code(403); exit('Sesi tidak valid. Muat ulang halaman dan coba lagi.');
-    }
+    check_csrf();
     $action = $_POST['action'] ?? '';
-    if ($action === 'start') {
+    if ($action === 'start' && empty($_SESSION['candidate'])) {
         foreach ($old as $key => $_) $old[$key] = trim(is_string($_POST[$key] ?? null) ? $_POST[$key] : '');
         if ($old['name'] === '' || strlen($old['name']) > 120) $errors[] = 'Isi nama lengkap (maksimal 120 karakter).';
         if (strlen($old['email']) > 254 || !filter_var($old['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'Masukkan alamat email yang valid.';
@@ -45,6 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $list = questions($old['position']);
                 if (!$list) $errors[] = 'Soal untuk posisi ini belum tersedia. Silakan hubungi panitia.';
                 else {
+                    $stmt = db()->prepare('INSERT INTO participants (name, email, nik, position) VALUES (?, ?, ?, ?)');
+                    $stmt->execute([$old['name'], $old['email'], $old['nik'], $old['position']]);
+                    $old['id'] = (int)db()->lastInsertId();
                     session_regenerate_id(true);
                     $_SESSION['candidate'] = $old;
                     $_SESSION['question_ids'] = array_column($list, 'id');
@@ -52,6 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     unset($_SESSION['completed']);
                     redirect();
                 }
+            } catch (PDOException $ex) {
+                if (($ex->errorInfo[1] ?? 0) === 1062) $errors[] = 'NIK ini sudah terdaftar. Setiap NIK hanya dapat mengikuti tes satu kali. Jika sesi Anda terputus, hubungi panitia.';
+                else $databaseError = true;
             } catch (Throwable $ex) { $databaseError = true; }
         }
     } elseif ($action === 'submit' && !empty($_SESSION['candidate'])) {
@@ -59,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $candidate = $_SESSION['candidate'];
             $list = questions($candidate['position']);
             if (!$list || array_column($list, 'id') !== $_SESSION['question_ids']) {
-                $errors[] = 'Daftar soal telah berubah. Silakan mulai kembali dan hubungi panitia jika masalah berlanjut.';
+                $errors[] = 'Daftar soal telah berubah. Silakan hubungi panitia untuk bantuan.';
             } else {
                 $responses = is_array($_POST['answer'] ?? null) ? $_POST['answer'] : [];
                 foreach ($list as $q) {
@@ -71,16 +54,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo = db(); $pdo->beginTransaction();
                     $correct = 0;
                     foreach ($list as $q) if ($responses[$q['id']] === $q['answer_key']) $correct++;
-                    $stmt = $pdo->prepare('INSERT INTO submissions (submission_token, name, email, nik, position, correct_count, total_questions, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-                    $stmt->execute([$_SESSION['submission_token'], $candidate['name'], $candidate['email'], $candidate['nik'], $candidate['position'], $correct, count($list), round($correct / count($list) * 100, 2)]);
+                    $stmt = $pdo->prepare('INSERT INTO submissions (submission_token, participant_id, name, email, nik, position, correct_count, total_questions, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                    $stmt->execute([$_SESSION['submission_token'], $candidate['id'], $candidate['name'], $candidate['email'], $candidate['nik'], $candidate['position'], $correct, count($list), round($correct / count($list) * 100, 2)]);
                     $submissionId = $pdo->lastInsertId();
                     $stmt = $pdo->prepare('INSERT INTO answers (submission_id, question_id, question_text, selected_option, selected_text, is_correct) VALUES (?, ?, ?, ?, ?, ?)');
                     foreach ($list as $q) {
                         $answer = $responses[$q['id']];
                         $stmt->execute([$submissionId, $q['id'], $q['question'], $answer, $q['option_' . strtolower($answer)], (int)($answer === $q['answer_key'])]);
                     }
+                    $review = [];
+                    foreach ($list as $q) {
+                        $answer = $responses[$q['id']];
+                        $review[] = ['question' => $q['question'], 'selected_option' => $answer, 'selected_text' => $q['option_' . strtolower($answer)], 'correct' => $answer === $q['answer_key']];
+                    }
                     $pdo->commit();
-                    $_SESSION['completed'] = ['name' => $candidate['name'], 'position' => $candidate['position']];
+                    $_SESSION['completed'] = ['name' => $candidate['name'], 'position' => $candidate['position'], 'correct' => $correct, 'total' => count($list), 'score' => round($correct / count($list) * 100, 2), 'review' => $review];
                     unset($_SESSION['candidate'], $_SESSION['question_ids'], $_SESSION['submission_token']);
                     redirect();
                 }
@@ -89,10 +77,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
             $databaseError = true;
         }
-    } elseif ($action === 'restart') {
-        unset($_SESSION['candidate'], $_SESSION['question_ids'], $_SESSION['submission_token'], $_SESSION['completed']);
+    } elseif ($action === 'restart' && empty($_SESSION['candidate'])) {
+        unset($_SESSION['completed']);
         redirect();
     } else { redirect(); }
+}
+// Jika panitia menghapus pendaftaran yang belum selesai, sesi lama tidak lagi berlaku.
+if (!empty($_SESSION['candidate']['id'])) {
+    try {
+        $stmt = db()->prepare('SELECT id FROM participants WHERE id = ? AND nik = ?');
+        $stmt->execute([$_SESSION['candidate']['id'], $_SESSION['candidate']['nik']]);
+        if (!$stmt->fetchColumn()) {
+            unset($_SESSION['candidate'], $_SESSION['question_ids'], $_SESSION['submission_token']);
+            $errors[] = 'Pendaftaran sebelumnya telah dihapus oleh panitia. Silakan isi biodata kembali.';
+        }
+    } catch (Throwable $ex) { $databaseError = true; }
 }
 $stage = !empty($_SESSION['candidate']) ? 'test' : (!empty($_SESSION['completed']) ? 'done' : 'start');
 $list = [];
@@ -107,42 +106,45 @@ $positionLabel = ['perawat' => 'Perawat', 'administrasi' => 'Administrasi'];
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f6f8f7"><title>Tes Karyawan Baru | Ruang Talenta</title>
+<meta name="theme-color" content="#10355b"><title>Tes Seleksi Magang | RSUD Malangbong &amp; Kemnaker</title>
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/app.js" defer></script>
 </head>
 <body class="stage-<?= e($stage) ?>">
 <header class="topbar"><div class="topbar-inner">
-    <a class="brand" href="index.php" aria-label="Ruang Talenta, halaman utama"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".65"/></svg></span><span>ruang<span class="brand-accent">talenta</span><small>REKRUTMEN & KARIER</small></span></a>
-    <div class="top-right"><span class="secure-dot"></span> PORTAL SELEKSI KARYAWAN <span class="top-divider"></span><span class="top-year">2026</span></div>
+    <a class="institution-brand" href="index.php" aria-label="Tes Seleksi Magang RSUD Malangbong dan Kemnaker, halaman utama">
+        <span class="institution-logos"><img src="assets/logo-rsud-malangbong.png" alt="Logo RSUD Malangbong"><span class="logo-separator" aria-hidden="true"></span><img src="assets/logo-kemnaker.png" alt="Logo Kemnaker"></span>
+        <span class="institution-divider" aria-hidden="true"></span><span class="institution-name"><strong>RSUD Malangbong</strong><small>SELEKSI MAGANG · KEMNAKER</small></span>
+    </a>
+    <div class="top-right"><span class="secure-dot"></span> PROGRAM MAGANG <span class="top-divider"></span><a class="admin-link" href="admin.php">Admin <span aria-hidden="true">↗</span></a></div>
 </div></header>
 <main class="page-shell">
 <?php if ($stage === 'start'): ?>
 <div class="intro-layout">
 <section class="intro reveal">
-    <div class="eyebrow"><span class="eyebrow-line"></span> SELEKSI KARYAWAN BARU <span class="eyebrow-number">/ 01</span></div>
-    <h1>Langkah awal<br>untuk <em>tumbuh</em><br>bersama.</h1>
-    <p class="intro-copy">Setiap perjalanan besar dimulai dari langkah pertama. Mari kenali potensi Anda melalui tes seleksi ini.</p>
+    <div class="eyebrow"><span class="eyebrow-line"></span> PROGRAM MAGANG KEMNAKER <span class="eyebrow-number">/ 01</span></div>
+    <h1>Seleksi Magang<br><em>RSUD Malangbong.</em></h1>
+    <p class="intro-copy">Selamat datang di tes seleksi magang RSUD Malangbong melalui program Kemnaker. Isi biodata dan tunjukkan potensi terbaik Anda.</p>
     <div class="intro-rule"></div>
     <div class="journey-label">PERJALANAN ANDA</div>
     <div class="journey"><div class="journey-item"><span class="journey-icon active">01</span><div><strong>Isi biodata</strong><small>Perkenalkan diri Anda</small></div></div><span class="journey-connector"></span><div class="journey-item"><span class="journey-icon">02</span><div><strong>Kerjakan tes</strong><small>Jawab sesuai kemampuan</small></div></div><span class="journey-connector"></span><div class="journey-item"><span class="journey-icon">03</span><div><strong>Selesai</strong><small>Jawaban tersimpan</small></div></div></div>
-    <div class="intro-bottom"><span class="sparkle">✳</span><span>Kesempatan baik dimulai dari sini.</span></div>
+    <div class="intro-bottom"><span class="sparkle">✳</span><span>Bersama membangun pengalaman dan masa depan.</span></div>
 </section>
 <section class="form-card reveal delay" aria-labelledby="form-title">
-    <div class="card-top"><div><div class="section-kicker"><span></span> TAHAP PERTAMA</div><h2 id="form-title">Mari berkenalan.</h2><p>Isi data diri Anda untuk memulai tes seleksi.</p></div><div class="card-number">01<span>/03</span></div></div>
+    <div class="card-top"><div><div class="section-kicker"><span></span> TAHAP PERTAMA</div><h2 id="form-title">Mari berkenalan.</h2><p>Isi biodata untuk mengikuti tes seleksi magang.</p></div><div class="card-number">01<span>/03</span></div></div>
     <?php if ($errors): ?><div class="alert" role="alert"><?= e(implode(' ', $errors)) ?></div><?php endif; ?>
     <form method="post" class="biodata-form">
         <input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>"><input type="hidden" name="action" value="start">
         <label for="name">Nama lengkap <span>*</span></label><input id="name" name="name" type="text" maxlength="120" placeholder="Masukkan nama lengkap" value="<?= e($old['name']) ?>" autocomplete="name" required>
         <label for="email">Alamat email <span>*</span></label><input id="email" name="email" type="email" maxlength="254" placeholder="contoh@email.com" value="<?= e($old['email']) ?>" autocomplete="email" required>
-        <label for="nik">Nomor Induk Kependudukan <span>*</span></label><input id="nik" name="nik" type="text" inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" placeholder="Masukkan 16 digit NIK" value="<?= e($old['nik']) ?>" required><div class="field-hint">Pastikan NIK sesuai dengan identitas Anda.</div>
+        <label for="nik">Nomor Induk Kependudukan <span>*</span></label><input id="nik" name="nik" type="text" inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" placeholder="Masukkan 16 digit NIK" value="<?= e($old['nik']) ?>" required><div class="field-hint">Satu NIK hanya dapat digunakan untuk satu kali pendaftaran.</div>
         <label for="position">Posisi yang dilamar <span>*</span></label><div class="select-wrap"><select id="position" name="position" required><option value="" disabled <?= $old['position'] === '' ? 'selected' : '' ?>>Pilih posisi</option><option value="perawat" <?= $old['position'] === 'perawat' ? 'selected' : '' ?>>Perawat</option><option value="administrasi" <?= $old['position'] === 'administrasi' ? 'selected' : '' ?>>Administrasi</option></select></div>
         <button class="primary-button" type="submit">Mulai tes seleksi <span aria-hidden="true">↗</span></button>
         <div class="privacy"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Data Anda digunakan untuk keperluan seleksi.</div>
     </form>
 </section>
 </div>
-<div class="bottom-strip"><div><span class="strip-icon">✦</span><span><strong>Selangkah lebih dekat</strong><small>Menuju perjalanan baru Anda</small></span></div><p>Persiapkan diri Anda dan kerjakan dengan tenang.</p><span class="strip-index">RT — 01</span></div>
+<div class="bottom-strip"><div><span class="strip-icon">✦</span><span><strong>Selangkah lebih dekat</strong><small>Menuju pengalaman di RSUD Malangbong</small></span></div><p>Persiapkan diri dan kerjakan tes dengan tenang.</p><span class="strip-index">MK — 01</span></div>
 <?php elseif ($stage === 'test'): ?>
 <section class="test-wrap reveal">
     <div class="test-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> TAHAP KEDUA <span class="eyebrow-number">/ 02</span></div><h1>Waktunya <em>menunjukkan</em><br>potensi Anda.</h1><p>Halo, <?= e($_SESSION['candidate']['name']) ?>. Pilih satu jawaban yang paling tepat untuk setiap pertanyaan.</p></div><div class="position-badge"><span>POSISI DILAMAR</span><strong><?= e($positionLabel[$_SESSION['candidate']['position']]) ?></strong></div></div>
@@ -161,11 +163,14 @@ $positionLabel = ['perawat' => 'Perawat', 'administrasi' => 'Administrasi'];
     <div class="test-actions"><button type="button" class="secondary-button" id="prev-button">← <span>Sebelumnya</span></button><button type="button" class="primary-button" id="next-button">Selanjutnya <span>→</span></button><button type="submit" class="primary-button" id="submit-button">Kirim jawaban <span>↗</span></button></div>
     </div><aside class="test-aside"><div class="aside-kicker">NAVIGASI SOAL</div><h3>Perjalanan tes</h3><p>Pilih nomor untuk berpindah antar pertanyaan.</p><div class="question-nav" id="question-nav"></div><div class="nav-legend"><span><i></i> Belum dijawab</span><span><i></i> Terjawab</span></div><div class="aside-note"><span>✳</span><p>Periksa kembali jawaban Anda sebelum mengirimkan tes.</p></div></aside></div>
     </form>
-    <?php elseif (!$databaseError): ?><div class="alert">Daftar soal telah berubah. Silakan mulai kembali.</div><form method="post"><input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>"><input type="hidden" name="action" value="restart"><button class="secondary-button">Mulai kembali</button></form><?php endif; ?>
+    <?php elseif (!$databaseError): ?><div class="alert">Daftar soal telah berubah. Silakan hubungi panitia untuk bantuan.</div><?php endif; ?>
 </section>
 <?php else: ?>
-<section class="complete-card reveal"><div class="complete-icon">✓</div><div class="section-kicker"><span></span> TES SELESAI</div><h1>Terima kasih,<br><em><?= e($_SESSION['completed']['name']) ?>.</em></h1><p>Jawaban Anda telah berhasil tersimpan. Terima kasih telah meluangkan waktu untuk mengikuti tes seleksi ini.</p><div class="complete-detail"><span>POSISI DILAMAR</span><strong><?= e($positionLabel[$_SESSION['completed']['position']]) ?></strong><span class="complete-status">✓ &nbsp; Terkirim</span></div><p class="complete-note">Informasi mengenai tahapan selanjutnya akan disampaikan oleh tim rekrutmen.</p><form method="post"><input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>"><input type="hidden" name="action" value="restart"><button type="submit" class="secondary-button">Kembali ke awal <span>↗</span></button></form></section>
+<section class="result-wrap reveal"><div class="result-hero"><div class="result-hero-copy"><div class="section-kicker"><span></span> TES SELESAI</div><h1>Terima kasih,<br><em><?= e($_SESSION['completed']['name']) ?>.</em></h1><p>Jawaban Anda berhasil tersimpan. Berikut hasil tes dan ringkasan jawaban Anda.</p><div class="result-tag">✓ &nbsp; Jawaban terkirim &nbsp; · &nbsp; <?= e($positionLabel[$_SESSION['completed']['position']]) ?></div></div><div class="score-card"><span>NILAI TES ANDA</span><strong><?= e(number_format((float)$_SESSION['completed']['score'], 2, ',', '.')) ?></strong><small><?= e($_SESSION['completed']['correct']) ?> dari <?= e($_SESSION['completed']['total']) ?> jawaban benar</small></div></div>
+<div class="result-heading"><div><div class="section-kicker"><span></span> RINGKASAN TES</div><h2>Jawaban Anda</h2><p>Hasil dihitung berdasarkan kunci jawaban yang tersedia.</p></div><span><?= e($_SESSION['completed']['total']) ?> SOAL</span></div>
+<div class="review-list"><?php foreach ($_SESSION['completed']['review'] as $i => $review): ?><article class="review-card"><div class="review-top"><span>SOAL <?= str_pad((string)($i + 1), 2, '0', STR_PAD_LEFT) ?></span><strong class="<?= $review['correct'] ? 'correct' : 'incorrect' ?>"><?= $review['correct'] ? '✓ Benar' : '× Belum tepat' ?></strong></div><h3><?= e($review['question']) ?></h3><div class="review-answer"><small>JAWABAN ANDA</small><p><?= e($review['selected_option']) ?>. <?= e($review['selected_text']) ?></p></div></article><?php endforeach; ?></div>
+<div class="result-end"><p>Informasi tahapan selanjutnya akan disampaikan oleh panitia seleksi.</p><form method="post"><input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>"><input type="hidden" name="action" value="restart"><button type="submit" class="secondary-button">Kembali ke awal <span>↗</span></button></form></div></section>
 <?php endif; ?>
 </main>
-<footer><span>© 2026 RUANG TALENTA <span class="footer-dot">•</span> PORTAL SELEKSI KARYAWAN</span><span>MADE FOR YOUR NEXT CHAPTER <span class="footer-star">✳</span></span></footer>
+<footer><span>© <?= date('Y') ?> RSUD MALANGBONG <span class="footer-dot">•</span> SELEKSI MAGANG</span><span>PROGRAM MAGANG KEMNAKER <span class="footer-star">✳</span></span></footer>
 </body></html>
