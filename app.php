@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }
+ini_set('session.gc_maxlifetime', '7200');
 session_set_cookie_params(['httponly' => true, 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', 'samesite' => 'Lax', 'path' => '/']);
 session_start();
 header('X-Content-Type-Options: nosniff');
@@ -36,7 +38,7 @@ function check_csrf(): void {
     if (!is_string($token) || !hash_equals($_SESSION['csrf'], $token)) { http_response_code(403); exit('Sesi tidak valid. Muat ulang halaman dan coba lagi.'); }
 }
 
-// Paket keperawatan hanya dibuka jika struktur 20 TWK + 30 SKD lengkap.
+// Paket soal hanya dibuka jika struktur 20 TWK + 30 SKD lengkap.
 function exam_is_ready(array $questions): bool {
     if (count($questions) !== 50) return false;
     foreach ($questions as $i => $question) {

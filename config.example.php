@@ -1,5 +1,7 @@
 <?php
-// Salin sebagai config.php di luar document root dan isi rahasia secara privat.
+// Salin sebagai config.php dalam folder aplikasi, dan isi rahasia secara privat.
+// Pastikan .htaccess terunggah dan melindungi file ini.
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__) { http_response_code(404); exit; }
 return [
     'host' => 'sql104.infinityfree.com',
     'port' => '3306',
