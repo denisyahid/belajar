@@ -5,7 +5,7 @@ require __DIR__ . '/exam.php';
 $errors = [];
 $old = ['name' => '', 'email' => '', 'nik' => '', 'position' => ''];
 $databaseError = false;
-$positions = ['perawat' => 'Keperawatan', 'administrasi' => 'Administrasi', 'kebidanan' => 'Kebidanan', 'laboratorium' => 'Laboratorium / ATLM', 'rekam_medis' => 'Rekam Medis'];
+$positions = ['perawat' => 'Keperawatan', 'administrasi' => 'Administrasi', 'kebidanan' => 'Kebidanan', 'laboratorium' => 'Laboratorium / ATLM', 'rekam_medis' => 'Rekam Medis', 'radiografer' => 'Radiografer / Radiologi'];
 $positionLabel = $positions;
 $remaining = 0; $drafts = []; $list = [];
 
@@ -97,8 +97,8 @@ if ($databaseError) $errors[] = 'Koneksi database bermasalah. Periksa konfiguras
         <label for="name">Nama lengkap <span>*</span></label><input id="name" name="name" type="text" maxlength="120" placeholder="Masukkan nama lengkap" value="<?= e($old['name']) ?>" autocomplete="name" required>
         <label for="email">Alamat email <span>*</span></label><input id="email" name="email" type="email" maxlength="254" placeholder="contoh@email.com" value="<?= e($old['email']) ?>" autocomplete="email" required>
         <label for="nik">Nomor Induk Kependudukan <span>*</span></label><input id="nik" name="nik" type="text" inputmode="numeric" pattern="[0-9]{16}" minlength="16" maxlength="16" placeholder="Masukkan 16 digit NIK" value="<?= e($old['nik']) ?>" required><div class="field-hint">Satu NIK hanya dapat digunakan untuk satu kali pendaftaran.</div>
-        <label for="position">Posisi yang dilamar <span>*</span></label><div class="select-wrap"><select id="position" name="position" required><option value="" disabled <?= $old['position'] === '' ? 'selected' : '' ?>>Pilih posisi</option><option value="perawat" <?= $old['position'] === 'perawat' ? 'selected' : '' ?>>Keperawatan</option><option value="kebidanan" <?= $old['position'] === 'kebidanan' ? 'selected' : '' ?>>Kebidanan</option><option value="laboratorium" <?= $old['position'] === 'laboratorium' ? 'selected' : '' ?>>Laboratorium / ATLM</option><option value="administrasi" <?= $old['position'] === 'administrasi' ? 'selected' : '' ?>>Administrasi</option><option value="rekam_medis" <?= $old['position'] === 'rekam_medis' ? 'selected' : '' ?>>Rekam Medis</option><option value="radiografer" disabled>Radiografer — belum tersedia</option><option value="ipsrs" disabled>IPSRS — belum tersedia</option></select></div>
-        <div class="field-hint availability-note">Tersedia: keperawatan, kebidanan, laboratorium, administrasi, dan rekam medis.</div>
+        <label for="position">Posisi yang dilamar <span>*</span></label><div class="select-wrap"><select id="position" name="position" required><option value="" disabled <?= $old['position'] === '' ? 'selected' : '' ?>>Pilih posisi</option><option value="perawat" <?= $old['position'] === 'perawat' ? 'selected' : '' ?>>Keperawatan</option><option value="kebidanan" <?= $old['position'] === 'kebidanan' ? 'selected' : '' ?>>Kebidanan</option><option value="laboratorium" <?= $old['position'] === 'laboratorium' ? 'selected' : '' ?>>Laboratorium / ATLM</option><option value="administrasi" <?= $old['position'] === 'administrasi' ? 'selected' : '' ?>>Administrasi</option><option value="rekam_medis" <?= $old['position'] === 'rekam_medis' ? 'selected' : '' ?>>Rekam Medis</option><option value="radiografer" <?= $old['position'] === 'radiografer' ? 'selected' : '' ?>>Radiografer / Radiologi</option><option value="ipsrs" disabled>IPSRS — belum tersedia</option></select></div>
+        <div class="field-hint availability-note">Tersedia: keperawatan, kebidanan, laboratorium, administrasi, rekam medis, dan radiografer.</div>
         <button class="primary-button" type="submit">Mulai tes seleksi <span aria-hidden="true">↗</span></button>
         <div class="privacy"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Waktu tes 60 menit dimulai setelah Anda menekan tombol di atas.</div>
     </form>
@@ -117,7 +117,9 @@ if ($databaseError) $errors[] = 'Koneksi database bermasalah. Periksa konfiguras
     <div class="test-progress"><div class="progress-heading"><span>PROGRES TES</span><strong id="progress-label">0 / <?= count($list) ?> terjawab</strong><div class="timer" aria-label="Sisa waktu pengerjaan">◷ <span id="timer"><?= sprintf('%02d:%02d', intdiv($remaining, 60), $remaining % 60) ?></span></div></div><div class="progress-track"><span id="progress-bar"></span></div><p id="save-status" class="save-status" aria-live="polite">Jawaban disimpan otomatis saat terhubung.</p></div>
     <?php foreach ($list as $i => $q): ?><section class="question-card" data-question data-index="<?= $i ?>">
         <div class="question-meta"><span>PERTANYAAN <b><?= str_pad((string)($i + 1), 2, '0', STR_PAD_LEFT) ?></b> <span class="question-total">/ <?= str_pad((string)count($list), 2, '0', STR_PAD_LEFT) ?></span></span><span class="question-type"><?= e($q['section']) ?> <?= $q['section'] === 'TWK' ? $i + 1 : $i - 19 ?> · PILIHAN GANDA</span></div>
-        <h2><?= e($q['question']) ?></h2><div class="options">
+        <h2><?= e($q['question']) ?></h2>
+        <?php if (($q['image_name'] ?? '') === 'soal-radiografer-siku.jpg'): ?><img class="question-image" src="soal-radiografer-siku.jpg" alt="Radiograf sendi siku dengan tanda panah" loading="lazy"><?php endif; ?>
+        <div class="options">
         <?php foreach (['A','B','C','D','E'] as $letter): if (trim($q['option_' . strtolower($letter)]) === '') continue; $checked = ($_POST['answer'][$q['id']] ?? $drafts[$q['id']] ?? '') === $letter; ?><label class="option"><input type="radio" name="answer[<?= e($q['id']) ?>]" value="<?= $letter ?>" <?= $checked ? 'checked' : '' ?> required><span class="option-letter"><?= $letter ?></span><span class="option-text"><?= e($q['option_' . strtolower($letter)]) ?></span><span class="option-check">✓</span></label><?php endforeach; ?>
         </div>
     </section><?php endforeach; ?>
