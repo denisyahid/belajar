@@ -32,7 +32,7 @@ Untuk pengembangan lokal, gunakan `php -S 0.0.0.0:8000 router.php`. Router penge
 ## Pembaruan database yang sudah dipakai
 
 - **Backup dulu**, hentikan tes yang sedang berjalan, dan pilih database yang benar sebelum impor. `database.sql` tidak menghapus tabel atau hasil peserta. File ini mendukung database baru dan database versi terakhir dengan paket 50 soal keperawatan (tabel `questions.section` dan `submissions.participant_id` sudah ada).
-- Impor `database.sql` sekali. Paket administrasi contoh lama dikenali dan diganti; kebidanan dan laboratorium ditambahkan. Soal keperawatan serta soal lain yang telah disunting tidak ditimpa. Hasil lama tetap tersimpan pada tabel `submissions` dan `answers` sebagai salinan. Jangan impor saat peserta sedang mengerjakan.
+- Impor `database.sql` sekali. Paket administrasi contoh lama dikenali dan diganti; kebidanan, laboratorium, dan rekam medis ditambahkan. Untuk mengaktifkan rekam medis pada database yang sudah ada, impor ulang `database.sql` versi terbaru setelah backup; ENUM posisi dan soal baru akan ditambahkan tanpa menghapus hasil peserta. Soal keperawatan serta soal lain yang telah disunting tidak ditimpa. Hasil lama tetap tersimpan pada tabel `submissions` dan `answers` sebagai salinan. Jangan impor saat peserta sedang mengerjakan.
 - Database **lebih lama** yang belum mempunyai kolom `questions.section` atau `submissions.participant_id` tidak dapat diperbarui langsung dengan file ini. Backup dan migrasikan terlebih dahulu ke versi paket 50 soal sebelumnya, atau gunakan database baru. Jangan menghapus data lama tanpa verifikasi.
 - SQL dapat diimpor ulang untuk menambahkan soal yang belum ada, tetapi tetap lakukan backup dan jangan mengandalkannya untuk mengganti soal yang sudah diubah. Soal dikelola langsung di tabel `questions`.
 
@@ -50,7 +50,7 @@ Panitia dapat melihat peserta, nilai dan jawaban, memfinalisasi draf peserta yan
 
 ## Soal dan cara kerja
 
-- Posisi aktif: keperawatan, administrasi, kebidanan, dan laboratorium/ATLM. Setiap paket terdiri dari 20 TWK dan 30 SKD. Rekam medis, radiografer, dan IPSRS belum aktif.
+- Posisi aktif: keperawatan, administrasi, kebidanan, laboratorium/ATLM, dan rekam medis. Setiap paket terdiri dari 20 TWK dan 30 SKD. Radiografer dan IPSRS belum aktif.
 - Soal SKD keperawatan berasal dari `SOAL KEPERAWATAN.docx`; 20 TWK keperawatan masih contoh. Administrasi menggunakan 30 soal pertama dari `SOAL ADMINISTRASI.docx`. SKD kebidanan dan laboratorium menggunakan dokumen bidang masing-masing, sedangkan TWK ketiganya berasal dari `SOAL KEBIDANAN 2.docx`. Dokumen Word disimpan sebagai sumber, bukan file untuk diupload ke web.
 - **Validasi mentor wajib dilakukan sebelum seleksi resmi.** Kunci dipertahankan dari sumber dan belum diverifikasi secara klinis/hukum; beberapa butir tampak bermasalah atau usang, termasuk TWK sumber nomor 7, laboratorium nomor 22, serta keperawatan nomor 13, 21, dan 26. Ubah `twk_is_example` menjadi `false` di `config.php` setelah TWK keperawatan diganti dan divalidasi.
 - Waktu tes 60 menit dihitung di server sejak biodata dikirim, termasuk saat halaman ditutup atau dimuat ulang. Jawaban disimpan bertahap saat JavaScript aktif dan koneksi tersedia. Setelah waktu habis, perubahan tidak lagi diterima dan soal yang belum dijawab bernilai salah. Jika tab tertutup saat waktu habis, hasil difinalisasi ketika peserta kembali atau admin memilih **Finalisasi hasil**. Perubahan yang belum berhasil tersimpan tidak dihitung.
