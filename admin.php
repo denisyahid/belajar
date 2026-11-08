@@ -95,7 +95,7 @@ if ($loggedIn) {
         }
     } catch (Throwable $ex) { $error = 'Data tidak dapat dimuat. Periksa konfigurasi dan migrasi database.'; }
 }
-$labels = ['perawat' => 'Keperawatan', 'administrasi' => 'Administrasi', 'kebidanan' => 'Kebidanan', 'laboratorium' => 'Laboratorium / ATLM'];
+$labels = ['perawat' => 'Keperawatan', 'administrasi' => 'Administrasi', 'kebidanan' => 'Kebidanan', 'laboratorium' => 'Laboratorium / ATLM', 'rekam_medis' => 'Rekam Medis'];
 ?>
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#10355b"><title>Admin | Seleksi Magang RSUD Malangbong</title><link rel="stylesheet" href="style.css"></head>
 <body class="admin-page"><header class="topbar"><div class="topbar-inner"><a class="institution-brand" href="index.php" aria-label="Tes Seleksi Magang RSUD Malangbong dan Kemnaker, halaman utama"><span class="institution-logos"><img src="logo-rsud-malangbong.png" alt="Logo RSUD Malangbong"><span class="logo-separator" aria-hidden="true"></span><img src="logo-kemnaker.png" alt="Logo Kemnaker"></span><span class="institution-divider" aria-hidden="true"></span><span class="institution-name"><strong>RSUD Malangbong</strong><small>SELEKSI MAGANG · KEMNAKER</small></span></a><div class="top-right"><?php if ($loggedIn): ?><form method="post"><input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>"><input type="hidden" name="action" value="logout"><button class="header-button">Keluar ↗</button></form><?php else: ?><a href="index.php" class="admin-link">Kembali ke tes ↗</a><?php endif; ?></div></div></header>

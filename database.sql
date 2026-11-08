@@ -2,7 +2,7 @@
 SET NAMES utf8mb4;
 CREATE TABLE IF NOT EXISTS questions (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  position ENUM('perawat','administrasi','kebidanan','laboratorium') NOT NULL,
+  position ENUM('perawat','administrasi','kebidanan','laboratorium','rekam_medis') NOT NULL,
   sort_order SMALLINT UNSIGNED NOT NULL,
   section ENUM('TWK','SKD') NOT NULL DEFAULT 'SKD',
   question TEXT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS participants (
   name VARCHAR(120) NOT NULL,
   email VARCHAR(254) NOT NULL,
   nik CHAR(16) NOT NULL,
-  position ENUM('perawat','administrasi','kebidanan','laboratorium') NOT NULL,
+  position ENUM('perawat','administrasi','kebidanan','laboratorium','rekam_medis') NOT NULL,
   started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY unique_participant_nik (nik)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS submissions (
   name VARCHAR(120) NOT NULL,
   email VARCHAR(254) NOT NULL,
   nik CHAR(16) NOT NULL,
-  position ENUM('perawat','administrasi','kebidanan','laboratorium') NOT NULL,
+  position ENUM('perawat','administrasi','kebidanan','laboratorium','rekam_medis') NOT NULL,
   correct_count SMALLINT UNSIGNED NOT NULL,
   total_questions SMALLINT UNSIGNED NOT NULL,
   score DECIMAL(5,2) NOT NULL,
@@ -65,9 +65,9 @@ CREATE TABLE IF NOT EXISTS draft_answers (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Menyesuaikan struktur dari versi paket 50 soal sebelumnya tanpa menghapus hasil.
-ALTER TABLE questions MODIFY position ENUM('perawat','administrasi','kebidanan','laboratorium') NOT NULL;
-ALTER TABLE participants MODIFY position ENUM('perawat','administrasi','kebidanan','laboratorium') NOT NULL;
-ALTER TABLE submissions MODIFY position ENUM('perawat','administrasi','kebidanan','laboratorium') NOT NULL;
+ALTER TABLE questions MODIFY position ENUM('perawat','administrasi','kebidanan','laboratorium','rekam_medis') NOT NULL;
+ALTER TABLE participants MODIFY position ENUM('perawat','administrasi','kebidanan','laboratorium','rekam_medis') NOT NULL;
+ALTER TABLE submissions MODIFY position ENUM('perawat','administrasi','kebidanan','laboratorium','rekam_medis') NOT NULL;
 ALTER TABLE answers MODIFY selected_option ENUM('A','B','C','D','E') NULL;
 
 -- Contoh administrasi lama perlu diganti, tetapi soal yang sudah disunting dipertahankan.
@@ -283,3 +283,58 @@ INSERT INTO questions (position, sort_order, section, question, option_a, option
 ('laboratorium', 49, 'SKD', 'Pasien datang ke laboratorium untuk pemeriksaan hepatitis C. TLM melakukan test rapid test HCV. Hasil pemeriksaan pada test adalah positif. Bagaimana interpretasi hasil yang ditunjukkan pada test yang dilakukan?', 'Muncul satu garis merah pada T dan tidak ada garis di C', 'Muncul dua garis merah pada T dan satu garis di C', 'Muncul satu garis merah pada T dan satu garis merah di C', 'Muncul satu garis merah pada C dan tidak ada garis di T', 'Muncul dua garis merah pada T dan dua garis merah pada C', 'C'),
 ('laboratorium', 50, 'SKD', 'Seorang analis diminta melakukan pemeriksaan hemostasis, sebelum dilakukan pengambilan darah analis melakukan konfirmasi kepada pasien. Dari hasil konfirmasi diketahui beberapa hari ini pasien mengkonsumsi aspirin. Pada kasus tersebut, pemeriksaan apa yang dapat dipengaruhi oleh obat tersebut?', 'PT', 'APTT', 'Agregasi trombosit', 'Bleeding Time', 'Rumple Leed Test', 'C')
 ON DUPLICATE KEY UPDATE section=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(section), section), question=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(question), question), option_a=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(option_a), option_a), option_b=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(option_b), option_b), option_c=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(option_c), option_c), option_d=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(option_d), option_d), option_e=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(option_e), option_e), answer_key=IF(@legacy_administration = 1 AND position = 'administrasi', VALUES(answer_key), answer_key);
+
+
+-- Rekam medis: TWK sama dengan laboratorium; SKD dan kunci dari Soal Rekam Medis.docx.
+-- INSERT IGNORE menjaga soal rekam medis yang sudah disunting pada impor ulang.
+INSERT IGNORE INTO questions (position, sort_order, section, question, option_a, option_b, option_c, option_d, option_e, answer_key) VALUES
+('rekam_medis', 1, 'TWK', 'Toleransi dalam kehidupan antar umat beragama berarti…', 'Persebaran agama dapat dilakukan kepada siapa saja dan dimana saja', 'Setiap agama memiliki tujuan dan cara ibadah yang sama kepada Tuhan', 'Tersedianya tempat beribadah bagi semua umat beragama dan berdekatan', 'Setiap orang boleh berganti dan berpindah agama setiap saat, biladikehendaki', 'Menghargai aktivitas inter dan umat beragama serta pemerintah', 'E'),
+('rekam_medis', 2, 'TWK', 'Cinta kepada tanah air dan bangsa dapat dibuktikan dengan cara…', 'Mengekspor semua hasil hasil bumi Indonesia dan mengimpor barang luar negeri', 'Tidak melakukan hubungan dengan negara lain dan melakukan proteksi', 'Menggunakan produksi dalam negeri meskipun mampu membelinya', 'Tidak menggunakan produksi luar negeri meskipun mampu membelinya', 'Mengurangi impor barang dari luar negeri agar devisa tetap stabil', 'E'),
+('rekam_medis', 3, 'TWK', 'Seorang pemimpin seharusnya memberikan pekerjaan kepada bawahannya dengan bijaksana yaitu…', 'Selalu memberikan contoh pada setiap pekerjaan', 'Memberikan pekerjaan sesuai dengan kodrat kemanusiannya', 'Memilih dengan teliti pekerjaan yang pantas akan diberikan', 'Melakukan pengecekan langsung terhadap semua hasil bawahan', 'Menasehati setiap agar melakukan pekerjaan dengan baik', 'B'),
+('rekam_medis', 4, 'TWK', 'Putusan yang diambil dalam musyawarah mufakat serta diliputi dengan semangat kekeluargaan adalah dengan…', 'Mengutamakan putusan golongan yang berkuasa', 'Melaksanakan hasil putusan bersama', 'Mempertahankan pendapat golongan yang sefaham', 'Meninggalkan ruang rapat karena berbeda pendapat', 'Menghormati pendapat yang disampaikan', 'B'),
+('rekam_medis', 5, 'TWK', 'Sikap manusia yang bertakwa dapat dibuktikan dengan cara…', 'Selalu melindungi kesalahan orang lain', 'Bekerja siang dan malam agar berbahagia', 'Bersyukur dan selalu berusaha lebih baik', 'Hanya beribadah tanpa berusaha lebih baik', 'Kurang bersyukur terhadap hasil yang dicapai', 'C'),
+('rekam_medis', 6, 'TWK', 'Proses penebangan hutan yang tidak mengindahkan keseimbangan antara alam dan manusianya akan berakibat…', 'Pengusaha semakin kaya dan korup', 'Meluaskan ozon di seluruh dunia', 'Kemiskinan bagi penduduk sekitar hutan', 'Reboisasi dan rehabilitasi hutan', 'Bencana alam yang tak terkendali', 'E'),
+('rekam_medis', 7, 'TWK', 'Demokrasi adalah pemerintahan yang berasala dari rakyat, dilakukan oleh rakyat, dan untuk kepentingan rakyat sehingga kepentingan ada di tangan rakyat. Kedaulatan rakyat sepenuhnya dilakukan oleh…', 'DPR dan MPR', 'DPA dan BPK', 'Presiden', 'DPR', 'MPR', 'A'),
+('rekam_medis', 8, 'TWK', 'Perilaku demokratis diharapkan tercipta dalam kehidupan bermasyarakat, berbangsa, dan bernegara seperti dewasa ini. Pengertian sikap demokratis secara sederhana adalah…', 'Mendengar dan menerima pendapat orang berdasarkan latar belakangnya', 'Menerima pendapat orang lain dengan tanpa pertimbangan', 'Mendesak orang lain agar menerima pendapat dan keinginannya', 'Menerima dan mengajukan pendapat dengan cara manusiawi', 'Memutuskan hasil rapat berdasarkan kepentingan pimpinan', 'D'),
+('rekam_medis', 9, 'TWK', 'Seorang pemimpin harus berani mendorong orang-orang yang menjadi asuhannya, agar berani mengambil inisiatif dan sanggup mempertanggungjawabkannya. Pola kepemimpinan ini adalah…', 'Ing ngarsa sung tulada', 'Ing madya mangun karsa', 'Tut wuri handayani', 'Idealis dan karismatik', 'Demokratis dan populis', 'C'),
+('rekam_medis', 10, 'TWK', 'Pada dasarnya UUD 1945 dapat diubah oleh MPR sesuai dengan pasal 37, dengan persyaratan…', 'Dihadiri oleh ½ jumlah anggota MPR dan semua anggota setuju', 'Disetujui oleh ½ jumlah anggota MPR dan dihadiri oleh 2/3 jumlah anggota MPR', 'Dihadiri oleh 2/3 jumlah anggota MPR dan disetujui oleh ½ yang hadir', 'Dihadiri dan disetujui oleh ½ jumlah anggota MPR lebih satu (1/2 + 1) jumlah anggota MPR', 'Dihadiri oleh 2/3jumlah anggota MPR dan disetujui oleh 2/3 jumlah anggota MPR yang hadir', 'C'),
+('rekam_medis', 11, 'TWK', 'Rumusan Pancasila sebagai dasar negara untuk pertama kali dicetuskan dalam sidang......', 'PETA', 'BPUPKI', 'PPKI', 'Himpunan kebaktian rakyat jawa', 'Masyumi', 'B'),
+('rekam_medis', 12, 'TWK', 'Tujuan Pancasila pada sila ketiga adalah...', 'Menghendaki untuk menjadi bangsa religius yang taat kepada Tuhan', 'Menghendaki untuk menjadi bangsa yang menghargai hak asasi manusia', 'Menghendaki untuk menjadi bangsa nasionalis dan bersatu yang mencintai tanah air Indonesia', 'Menghendaki untuk menjadi bangaa yang demokratis di dalam sistem pemerintahannya sebagai sebuah bangsa dan negara', 'Menghendaki untuk menjadi bangsa yang berkeadilan', 'C'),
+('rekam_medis', 13, 'TWK', 'Bagi bangsa Indonesia Pancasila secara singkat dari asal kata diartikan sebagai….', 'Lima dasar negara indonesia', 'Lima aturan negara Indonesia', 'Lima pandangan hidup negara Indonesia', 'Lima falsafah negara Indonesia', 'Lima kesepakatan bernegara di Indonesia', 'A'),
+('rekam_medis', 14, 'TWK', 'Bangsa indonesia memiliki kedudukan yang sama baik hak maupun kewajiban didalam masyarakat. Bangsa indonesia tidak boleh memaksakan kehendak dan selalu mengutamakan musyawarah dalam mengambil keputusan serta menghormati dan menjunjung tinggi serta memiliki itikad baik juga tanggung jawab atas hasil kesepakatan dalam musyawarah. Merupakan pengamalan pancasila sila ...', 'Pertama', 'Kedua', 'Ketiga', 'Keempat', 'Kelima', 'C'),
+('rekam_medis', 15, 'TWK', 'Lambang kepala ke kanan pada burung garuda memiliki arti….', 'Kejayaan', 'Kekuatan', 'Etika', 'Garis katulistiwa', 'Perbuatan', 'D'),
+('rekam_medis', 16, 'TWK', 'Peraturan-peraturan di negara Republik Indonesia mempunyai hierarki tertentu. Di antara peraturan perundang-undangan berikut yang terendah kedudukannya dari yang lain adalah…', 'Undang-undang', 'Keputusan MPR', 'Peraturan Daerah', 'Undang Undang Dasar', 'Peraturan Presiden', 'C'),
+('rekam_medis', 17, 'TWK', 'Dokumen penetapan Pancasila sebagai dasar negara terdapat pada dokumen di bawah ini, kecuali ...', 'Pembukaan UUD 1945', 'Mukadimah Konstitusi Republik Indonesia Serikat', 'Mukadimah UUDS 1950', 'Konstitusi RIS', 'Sidang PPKI 22 Agustus 1945', 'E'),
+('rekam_medis', 18, 'TWK', 'Peraturan perundang undangan tertinggi sekarang yang berlaku di Indonesia adalah....', 'Pancasila', 'UUD 1945', 'Ketetapan ketetapan MPR', 'Supersemar', 'Undang undang', 'B'),
+('rekam_medis', 19, 'TWK', 'Berapa kali UUD 1945 di amandemen…', '2 kali', '3 kali', '4 kali', '5 kali', '6 kali', 'C'),
+('rekam_medis', 20, 'TWK', 'Keadaan geografis Indonesia yang terdiri atas beribu-ribu pulau dan terletak di antara dua samudra dan iklim yang berbeda menyebabkan terjadinya ..', 'Konflik sosial', 'Akulturasi budaya', 'Konsolidasi masyarakat', 'Kemajemukan masyarakat', 'Perpecahan antar masyarakat', 'D'),
+('rekam_medis', 21, 'SKD', 'Apa pengertian rekam medis menurut Permenkes No. 24 Tahun 2022?', 'Dokumen administrasi pembayaran pasien', 'Dokumen yang berisi identitas pasien, pemeriksaan, pengobatan, tindakan, dan pelayanan lain', 'Catatan khusus dokter saja', 'Dokumen klaim BPJS', '', 'B'),
+('rekam_medis', 22, 'SKD', 'Siapa yang bertanggung jawab mengisi rekam medis?', 'Hanya dokter spesialis', 'Hanya petugas rekam medis', 'Tenaga kesehatan pemberi pelayanan kepada pasien', 'Petugas kasir', '', 'C'),
+('rekam_medis', 23, 'SKD', 'Apa tujuan utama penyelenggaraan rekam medis?', 'Memenuhi kebutuhan administrasi saja', 'Menunjang pelayanan, mutu, keselamatan, dan kesinambungan perawatan pasien', 'Meningkatkan jumlah kunjungan', 'Mempermudah pembayaran pasien', '', 'B'),
+('rekam_medis', 24, 'SKD', 'Berapa lama penyimpanan data rekam medis elektronik setelah pasien terakhir berobat?', '2 tahun', '5 tahun', '10 tahun', '25 tahun', '', 'D'),
+('rekam_medis', 25, 'SKD', 'Apa yang dimaksud dengan rekam medis elektronik (RME)?', 'Rekam medis yang ditulis tangan', 'Rekam medis yang dibuat menggunakan sistem elektronik', 'Dokumen klaim BPJS', 'Arsip laporan keuangan', '', 'B'),
+('rekam_medis', 26, 'SKD', 'Siapa pemilik dokumen rekam medis?', 'Pasien', 'Dokter', 'Fasilitas pelayanan kesehatan', 'BPJS Kesehatan', '', 'C'),
+('rekam_medis', 27, 'SKD', 'Apa yang menjadi hak pasien terhadap isi rekam medis?', 'Menguasai seluruh sistem RME', 'Memperoleh isi rekam medis dalam bentuk ringkasan atau salinan sesuai ketentuan', 'Mengubah diagnosis dokter', 'Menghapus seluruh catatan medis', '', 'B'),
+('rekam_medis', 28, 'SKD', 'Apa yang dimaksud dengan kerahasiaan rekam medis?', 'Informasi boleh diberikan kepada siapa saja', 'Informasi pasien hanya dapat diakses atau diberikan sesuai kewenangan dan ketentuan hukum', 'Semua pegawai boleh melihat data pasien', 'Data pasien boleh disebarkan untuk promosi', '', 'B'),
+('rekam_medis', 29, 'SKD', 'Apa kepanjangan dari ICD-10?', 'International Classification of Diseases 10th Revision', 'International Code of Diagnosis', 'Indonesian Classification of Diseases', 'International Clinical Data', '', 'A'),
+('rekam_medis', 30, 'SKD', 'Apa fungsi utama ICD-10?', 'Menentukan tarif rumah sakit', 'Mengklasifikasikan penyakit dan masalah kesehatan', 'Menentukan jadwal dokter', 'Menghitung jumlah tempat tidur', '', 'B'),
+('rekam_medis', 31, 'SKD', 'Apa yang dimaksud diagnosis utama (principal diagnosis)?', 'Diagnosis yang paling mahal pengobatannya', 'Diagnosis yang ditegakkan pada akhir episode perawatan dan terutama bertanggung jawab atas kebutuhan perawatan setelah evaluasi', 'Diagnosis pertama yang ditulis dokter', 'Semua diagnosis pasien', '', 'B'),
+('rekam_medis', 32, 'SKD', 'Siapa yang menetapkan diagnosis pasien?', 'Petugas koding', 'Dokter atau dokter gigi yang berwenang', 'Petugas pendaftaran', 'Petugas klaim', '', 'B'),
+('rekam_medis', 33, 'SKD', 'Apa tugas utama seorang koder?', 'Menentukan diagnosis pasien', 'Mengode diagnosis dan tindakan berdasarkan dokumentasi klinis', 'Mengubah hasil pemeriksaan', 'Menentukan terapi pasien', '', 'B'),
+('rekam_medis', 34, 'SKD', 'Apa yang harus dilakukan koder jika diagnosis dokter tidak jelas?', 'Menebak diagnosis', 'Mengubah diagnosis sendiri', 'Melakukan klarifikasi kepada dokter melalui mekanisme yang berlaku', 'Menghapus diagnosis', '', 'C'),
+('rekam_medis', 35, 'SKD', 'Apa kepanjangan dari INA-CBG?', 'Indonesia Case Based Groups', 'International National Clinical Based Groups', 'Indonesian Clinical Billing Guide', 'Integrated National Based Groups', '', 'A'),
+('rekam_medis', 36, 'SKD', 'Apa tujuan penerapan sistem INA-CBG dalam JKN?', 'Menentukan jadwal pelayanan', 'Pembayaran pelayanan kesehatan berdasarkan kelompok kasus', 'Menghitung gaji pegawai', 'Mengatur jadwal rawat jalan', '', 'B'),
+('rekam_medis', 37, 'SKD', 'Apa yang dimaksud dengan assembling rekam medis?', 'Pemberian kode diagnosis', 'Penyusunan dan pemeriksaan kelengkapan formulir rekam medis', 'Pemusnahan dokumen', 'Pendaftaran pasien', '', 'B'),
+('rekam_medis', 38, 'SKD', 'Apa yang dimaksud dengan analisis kuantitatif rekam medis?', 'Menilai ketepatan diagnosis', 'Memeriksa kelengkapan komponen rekam medis', 'Menilai kesesuaian tarif', 'Menghitung jumlah pasien', '', 'B'),
+('rekam_medis', 39, 'SKD', 'Apa yang dimaksud analisis kualitatif rekam medis?', 'Memeriksa jumlah formulir', 'Menilai konsistensi, kelengkapan, dan kualitas isi dokumentasi klinis', 'Menghitung jumlah kunjungan', 'Memeriksa nomor antrean', '', 'B'),
+('rekam_medis', 40, 'SKD', 'Apa kepanjangan dari DPJP?', 'Dokter Penanggung Jawab Pelayanan', 'Dokter Pemeriksa Jaminan Pasien', 'Direktur Pelayanan Jaminan Pasien', 'Dokter Pengelola Jaminan Pelayanan', '', 'A'),
+('rekam_medis', 41, 'SKD', 'Kapan rekam medis harus dilengkapi?', 'Saat pasien sudah pulang saja', 'Segera setelah pelayanan diberikan sesuai ketentuan', 'Setelah klaim BPJS dibayar', 'Setiap akhir tahun', '', 'B'),
+('rekam_medis', 42, 'SKD', 'Apa fungsi informed consent?', 'Persetujuan tindakan medis setelah pasien menerima penjelasan yang memadai', 'Surat pembayaran pasien', 'Surat rujukan pasien', 'Formulir pendaftaran', '', 'A'),
+('rekam_medis', 43, 'SKD', 'Apa yang dimaksud dengan duplikasi nomor rekam medis?', 'Satu pasien memiliki lebih dari satu nomor rekam medis', 'Dua pasien memiliki nomor rekam medis sama', 'Nomor rekam medis tidak ditemukan', 'Nomor rekam medis berubah setiap kunjungan', '', 'A'),
+('rekam_medis', 44, 'SKD', 'Apa tujuan indeks penyakit?', 'Mengetahui jumlah dokter', 'Memudahkan pencarian data penyakit berdasarkan kode atau diagnosis', 'Menghitung biaya obat', 'Mencatat jadwal operasi', '', 'B'),
+('rekam_medis', 45, 'SKD', 'Apa yang dimaksud dengan missfile?', 'Kesalahan diagnosis', 'Kesalahan penempatan atau penyimpanan berkas rekam medis', 'Kesalahan pembayaran', 'Kesalahan pemberian obat', '', 'B'),
+('rekam_medis', 46, 'SKD', 'Apa kepanjangan dari SKM?', 'Surat Keterangan Medis', 'Sistem Kode Medis', 'Standar Klasifikasi Medis', 'Surat Kontrol Medis', '', 'A'),
+('rekam_medis', 47, 'SKD', 'Apa yang harus dilakukan apabila ditemukan ketidaksesuaian identitas pasien pada rekam medis?', 'Membiarkan saja', 'Menghapus seluruh dokumen', 'Melakukan verifikasi dan koreksi melalui prosedur yang berlaku', 'Mengganti identitas tanpa verifikasi', '', 'C'),
+('rekam_medis', 48, 'SKD', 'Apa manfaat rekam medis bagi aspek hukum?', 'Sebagai alat bukti dokumentasi pelayanan kesehatan', 'Sebagai pengganti identitas penduduk', 'Sebagai bukti pembayaran pajak', 'Sebagai dokumen promosi rumah sakit', '', 'A'),
+('rekam_medis', 49, 'SKD', 'Apa yang dimaksud dengan audit rekam medis?', 'Pemeriksaan dan evaluasi dokumentasi rekam medis untuk menilai kepatuhan dan mutu', 'Pemeriksaan keuangan rumah sakit saja', 'Penghitungan jumlah pasien', 'Pemeriksaan stok obat', '', 'A'),
+('rekam_medis', 50, 'SKD', 'Apa risiko utama apabila rekam medis tidak lengkap?', 'Mempercepat pelayanan', 'Mengurangi beban kerja', 'Mengganggu kesinambungan pelayanan, keselamatan pasien, aspek hukum, dan klaim', 'Tidak memiliki dampak', '', 'C');
