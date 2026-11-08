@@ -1,18 +1,4 @@
 (() => {
-  // This discourages ordinary copying, but cannot prevent screenshots or inspection.
-  const isQuestion = target => target instanceof Element && !!target.closest('.question-card, .protected-questions');
-  const selectionIncludesQuestions = () => {
-    const selection = window.getSelection();
-    return !!selection && !selection.isCollapsed && [...document.querySelectorAll('.question-card, .protected-questions')].some(node => selection.containsNode(node, true));
-  };
-  ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach(type => {
-    document.addEventListener(type, event => {
-      if (isQuestion(event.target) || (['copy', 'cut'].includes(type) && selectionIncludesQuestions())) event.preventDefault();
-    });
-  });
-  document.addEventListener('keydown', event => {
-    if ((event.ctrlKey || event.metaKey) && ['c', 'x', 'a'].includes(event.key.toLowerCase()) && (isQuestion(event.target) || selectionIncludesQuestions())) event.preventDefault();
-  });
   const form = document.getElementById('test-form');
   if (!form) return;
   const cards = [...form.querySelectorAll('[data-question]')];
