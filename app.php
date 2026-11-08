@@ -28,7 +28,7 @@ function db(): PDO {
     return $db;
 }
 function questions(string $position): array {
-    $stmt = db()->prepare('SELECT * FROM questions WHERE position = ? ORDER BY sort_order');
+    $stmt = db()->prepare('SELECT q.*, qi.image_name FROM questions q LEFT JOIN question_images qi ON qi.question_id = q.id WHERE q.position = ? ORDER BY q.sort_order');
     $stmt->execute([$position]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }

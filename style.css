@@ -18,3 +18,6 @@
 /* Membatasi penyalinan biasa pada soal; perlindungan tidak dapat mencegah tangkapan layar. */
 .question-card,.protected-questions{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.progress-heading{gap:10px;flex-wrap:wrap}.timer{margin-left:auto;border:1px solid #cce7f5;border-radius:6px;background:#edf8fd;color:#116a9b;font-size:13px;font-weight:800;letter-spacing:.5px;padding:7px 10px;white-space:nowrap}.timer span{font-variant-numeric:tabular-nums;color:inherit!important;font-size:13px!important;letter-spacing:.5px!important}.timer-warning{background:#fff2ea;border-color:#f1d4c4;color:#b65e3a}.save-status{font-size:10px;color:#7898a9;margin:8px 0 0;line-height:1.4}.save-status.save-error{color:#ad5d38}.question-card{touch-action:manipulation}@media(max-width:760px){.progress-heading{gap:7px}.timer{padding:5px 8px}.test-progress{padding:14px 16px}.save-status{font-size:10px}}
 .finalize-button{border:0;background:none;padding:7px 0 0;font-size:10px;cursor:pointer}
+
+/* Gambar soal tetap terbaca di layar kecil tanpa melampaui kartu soal. */
+.question-image{display:block;width:auto;max-width:100%;height:auto;max-height:420px;margin:16px auto 24px;object-fit:contain}
