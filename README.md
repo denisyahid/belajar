@@ -15,6 +15,7 @@ Aplikasi PHP dan MySQL untuk seleksi magang di RSUD Malangbong. Semua file aplik
    save_answer.php
    app.php
    exam.php
+   excel.php
    config.php
    app.js
    style.css
@@ -26,7 +27,7 @@ Aplikasi PHP dan MySQL untuk seleksi magang di RSUD Malangbong. Semua file aplik
    Aktifkan tampilan file tersembunyi di pengelola file agar `.htaccess` ikut terunggah. **Jangan upload** `database.sql`, dokumen Word, `.git`, `README.md`, atau `REFERENSI_RADIOGRAFER.md` ke folder web; SQL berisi kunci soal. File SQL diimpor dari komputer melalui phpMyAdmin, bukan dijalankan melalui browser.
 4. Buka alamat hosting untuk peserta, atau `admin.php` untuk panitia. PHP 8.0+ dengan ekstensi `pdo_mysql`, session, dan MySQL 5.7+/MariaDB 10.2+ diperlukan. Gunakan HTTPS. InfinityFree biasanya hanya mengizinkan koneksi database dari hostingnya sendiri.
 
-`.htaccess` membatasi akses web ke file internal dan SQL untuk Apache dengan `mod_authz_core`/`mod_access_compat`. Sebelum digunakan, pastikan `https://alamat-anda/app.php`, `exam.php`, dan `config.php` memberikan respons **403 atau 404**, bukan isi file. Jika tidak, jangan gunakan aplikasi sampai hosting dikonfigurasi untuk menolak akses tersebut. Untuk server selain Apache, buat aturan setara; `config.php` adalah file sensitif. Sebagai tambahan, hapus `database.sql` atau dokumen sumber jika terlanjur terunggah. Jangan mengunggah file rahasia atau soal ke repository yang dapat diakses peserta.
+`.htaccess` membatasi akses web ke file internal dan SQL untuk Apache dengan `mod_authz_core`/`mod_access_compat`. Sebelum digunakan, pastikan `https://alamat-anda/app.php`, `exam.php`, `excel.php`, dan `config.php` memberikan respons **403 atau 404**, bukan isi file. Jika tidak, jangan gunakan aplikasi sampai hosting dikonfigurasi untuk menolak akses tersebut. Untuk server selain Apache, buat aturan setara; `config.php` adalah file sensitif. Sebagai tambahan, hapus `database.sql` atau dokumen sumber jika terlanjur terunggah. Jangan mengunggah file rahasia atau soal ke repository yang dapat diakses peserta.
 
 Untuk pengembangan lokal, gunakan `php -S 0.0.0.0:8000 router.php`. Router pengembangan hanya melayani file publik yang diperlukan karena server bawaan PHP tidak membaca `.htaccess`.
 
@@ -48,6 +49,10 @@ php -r 'echo password_hash(readline("Kata sandi admin: "), PASSWORD_DEFAULT), PH
 Salin hasilnya ke `admin_password_hash` di `config.php`. Jangan menulis kata sandi biasa ke Git. Karena kata sandi sebelumnya dibagikan dalam percakapan, gunakan kata sandi baru yang kuat sebelum aplikasi dibuka. Alternatif konfigurasi menggunakan `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `ADMIN_USERNAME`, dan `ADMIN_PASSWORD_HASH` sebagai environment variable.
 
 Panitia dapat melihat peserta, nilai dan jawaban, memfinalisasi draf peserta yang waktunya habis, atau menghapus pendaftaran yang belum selesai untuk pendaftaran ulang. Akun dikunci 15 menit setelah lima kesalahan login; sesi admin habis setelah 30 menit tidak aktif.
+
+Daftar peserta dapat disaring berdasarkan **posisi**, **status** (selesai, dalam proses, waktu habis), **rentang tanggal pendaftaran**, dan **kata kunci** nama/email/NIK, serta diurutkan menurut waktu daftar, nilai, atau nama. Filter tersimpan di URL sehingga tautan dapat dibagikan atau disimpan.
+
+Tombol **Export Excel** mengunduh satu berkas `.xlsx` berisi dua lembar: `Peserta` (seluruh baris yang sesuai filter, bukan hanya halaman yang tampil) dan `Rekap Posisi` (jumlah peserta, jumlah selesai/dalam proses/waktu habis, rata-rata, nilai tertinggi, dan terendah per posisi). Pada halaman detail peserta tersedia **Export jawaban** untuk mengunduh lembar jawaban peserta tersebut. Berkas dibuat langsung oleh `excel.php` tanpa pustaka tambahan dan tanpa memerlukan ekstensi `zip`, jadi pastikan file itu ikut terunggah. Ekspor peserta dibatasi 10.000 baris pertama; persempit filter bila peserta lebih banyak. Nilai yang diekspor hanya berasal dari hasil tes yang benar-benar dikirim atau difinalisasi panitia.
 
 ## Soal dan cara kerja
 

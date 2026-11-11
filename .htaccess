@@ -1,5 +1,5 @@
 # File internal, kunci soal, dan dokumen tidak boleh diakses lewat web.
-<FilesMatch "(?i)(\.(sql|docx|md)$|^(app|exam|config(\.example)?)\.php$)">
+<FilesMatch "(?i)(\.(sql|docx|md)$|^(app|exam|excel|config(\.example)?)\.php$)">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
