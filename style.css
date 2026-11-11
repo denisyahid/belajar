@@ -21,3 +21,30 @@
 
 /* Gambar soal tetap terbaca di layar kecil tanpa melampaui kartu soal. */
 .question-image{display:block;width:auto;max-width:100%;height:auto;max-height:420px;margin:16px auto 24px;object-fit:contain}
+
+/* Filter dan ekspor Excel pada dashboard admin. */
+.stats-grid{grid-template-columns:repeat(4,1fr)}
+.stat-card-filter{border-color:#cfe6f3;background:linear-gradient(180deg,#f4fbff,#fff)}
+.participants-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.filter-count{font-size:11px;color:#8ba0af;white-space:nowrap}
+.export-button{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 15px;border:1px solid #cfe2ee;border-radius:5px;background:#eaf6fd;color:#146b99;font-size:12px;font-weight:700;text-decoration:none;transition:background .2s,border-color .2s,box-shadow .2s;white-space:nowrap}
+.export-button:hover{background:#dcf0fb;border-color:#a9d4e8;box-shadow:0 6px 16px #145e9917}
+.filter-form{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;padding:20px 26px;border-top:1px solid #e7eff5;background:#fbfdff}
+.filter-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.filter-field label{font-size:9px;letter-spacing:1.1px;font-weight:800;color:#93a9b8;text-transform:uppercase}
+.filter-field input,.filter-field select{width:100%;height:41px;min-width:0;border:1px solid #dce8f0;border-radius:5px;background:#fff;color:#26455b;padding:0 11px;font-size:12px}
+.filter-field input:focus,.filter-field select:focus{border-color:#54a6ca;box-shadow:0 0 0 3px #e8f6fc;outline:0}
+.filter-search{grid-column:span 2}
+.filter-form select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#7d9183 50%),linear-gradient(135deg,#7d9183 50%,transparent 50%);background-position:calc(100% - 17px) center,calc(100% - 12px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
+.filter-actions{display:flex;align-items:flex-end;gap:9px;grid-column:2/-1;justify-content:flex-end}
+.filter-submit{border:0;border-radius:5px;background:#145e99;color:#fff;height:41px;padding:0 18px;font-size:12px;font-weight:700}
+.filter-submit:hover{background:#0e4878}
+.filter-reset{display:inline-flex;align-items:center;justify-content:center;height:41px;padding:0 14px;border:1px solid #dce8f0;border-radius:5px;color:#5b7f96;text-decoration:none;font-size:12px;font-weight:700;background:#fff}
+.filter-reset:hover{background:#f2f9fd}
+.filter-summary{margin:0;padding:15px 26px 0;border-top:1px solid #eef4f8;font-size:11px;line-height:1.6;color:#8ba0af}
+.position-tag{display:inline-block;padding:5px 8px;border-radius:4px;background:#f1f8fc;color:#3d6f8c;font-size:10px;font-weight:700;white-space:nowrap}
+.detail-tools{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.admin-detail .review-answer p{overflow-wrap:anywhere}
+@media(max-width:1200px){.filter-form{grid-template-columns:repeat(3,minmax(0,1fr))}.filter-search{grid-column:span 1}.filter-actions{grid-column:1/-1;justify-content:flex-end}}
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.filter-form{grid-template-columns:repeat(2,minmax(0,1fr));padding:18px 20px}.filter-actions{grid-column:1/-1;justify-content:flex-start}.participants-tools{justify-content:flex-start}.detail-tools{align-items:flex-start}}
+@media(max-width:760px){.participants-head{gap:16px}.participants-tools{width:100%;gap:10px}.export-button{flex:1;justify-content:center}.filter-form{grid-template-columns:1fr}.filter-search{grid-column:span 1}.filter-actions{grid-column:1/-1;flex-wrap:wrap}.filter-field input,.filter-field select{font-size:16px;height:44px}.filter-submit,.filter-reset{height:44px}.filter-reset{flex:1}.filter-submit{flex:2}.filter-summary{padding:13px 20px 0}.filter-count{width:100%}}
